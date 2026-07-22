@@ -1,0 +1,3333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#2C7A4B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Recipe Shopping">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%232C7A4B' width='180' height='180'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>👨‍🍳</text></svg>">
+  <title>Recipe Shopping</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      width: 100%;
+      overflow: hidden;
+      padding-top: max(12px, env(safe-area-inset-top));
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .search-view {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #2C7A4B 0%, #1E5A35 100%);
+      color: white;
+      padding: 1.5rem 1rem 1rem;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .search-input {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .search-input input {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .search-input input::placeholder {
+      color: #999;
+    }
+
+    .filter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-tag {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-tag:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 1rem;
+    }
+
+    .recipe-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+      border: 1px solid #eee;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .recipe-card:active {
+      background: #f9f9f9;
+      transform: scale(0.98);
+    }
+
+    .recipe-card-restaurant {
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    .recipe-card-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.25rem;
+    }
+
+    .recipe-card-desc {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #999;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 1rem;
+    }
+
+    .recipe-view {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .recipe-view.active {
+      display: flex;
+    }
+
+    .recipe-header {
+      background: linear-gradient(135deg, #2C7A4B 0%, #1E5A35 100%);
+      color: white;
+      padding: 0.75rem 1rem 1rem;
+      flex-shrink: 0;
+    }
+
+    .recipe-header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .recipe-meta {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 0.5rem;
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 0.4rem 0.875rem;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 0.75rem;
+    }
+
+    .back-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* SERVINGS CONTROL */
+    .servings-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: white;
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+    }
+
+    .servings-label {
+      font-size: 13px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .servings-stepper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .servings-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      font-size: 18px;
+      font-weight: 600;
+      color: #2C7A4B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: none;
+    }
+
+    .servings-btn:active {
+      background: #e8f5ee;
+      transform: scale(0.94);
+    }
+
+    .servings-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    /* TABS */
+    .view-tabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+    }
+
+    .view-tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.75rem;
+      font-size: 14px;
+      font-weight: 600;
+      color: #999;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .view-tab.active {
+      color: #2C7A4B;
+      border-bottom: 2px solid #2C7A4B;
+    }
+
+    .instructions-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 1rem;
+      display: none;
+    }
+
+    .instructions-list.active {
+      display: block;
+    }
+
+    .instruction-step {
+      display: flex;
+      gap: 12px;
+      padding: 0.875rem 0.75rem;
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+      border: 1px solid #eee;
+    }
+
+    .step-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #2C7A4B;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.5;
+      padding-top: 2px;
+    }
+
+    .no-instructions {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .recipe-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 1rem;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 1rem 0.75rem;
+      background: white;
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      border: 1px solid #eee;
+    }
+
+    .item:active {
+      background: #f9f9f9;
+      transform: scale(0.98);
+    }
+
+    .item.checked {
+      opacity: 0.5;
+    }
+
+    .item.checked .item-text {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      transition: all 0.2s ease;
+    }
+
+    .item.checked .checkbox {
+      background: #2C7A4B;
+      border-color: #2C7A4B;
+    }
+
+    .checkbox::after {
+      content: '';
+      width: 0;
+      height: 0;
+      border-left: 2px solid white;
+      border-top: 2px solid white;
+      transform: rotate(-45deg);
+      position: relative;
+      top: 2px;
+      right: 2px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .item.checked .checkbox::after {
+      opacity: 1;
+    }
+
+    .item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+      line-height: 1.3;
+    }
+
+    .item-qty {
+      font-size: 12px;
+      color: #999;
+      margin-top: 0.25rem;
+    }
+
+    .progress-container {
+      background: white;
+      padding: 1rem;
+      border-top: 1px solid #eee;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #2C7A4B;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .footer {
+      display: flex;
+      gap: 10px;
+      padding: 1rem;
+      flex-shrink: 0;
+      background: white;
+      border-top: 1px solid #eee;
+    }
+
+    button {
+      flex: 1;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:active {
+      background: #e0e0e0;
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: #2C7A4B;
+      color: white;
+    }
+
+    .btn-primary:active {
+      background: #1E5A35;
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- SEARCH VIEW -->
+    <div class="search-view" id="searchView">
+      <div class="header">
+        <h1>👨‍🍳 Copycat Recipes</h1>
+        <div class="search-input">
+          <input type="text" id="searchInput" placeholder="Search recipes..." oninput="filterRecipes()" />
+        </div>
+        <div class="filter-tags">
+          <div class="filter-tag" onclick="filterByRestaurant('all')">All</div>
+          <div class="filter-tag" onclick="filterByRestaurant('Olive Garden')">Olive Garden</div>
+          <div class="filter-tag" onclick="filterByRestaurant('Cheesecake Factory')">Cheesecake Factory</div>
+          <div class="filter-tag" onclick="filterByRestaurant('Panera Bread')">Panera</div>
+          <div class="filter-tag" onclick="filterByRestaurant('Chipotle')">Chipotle</div>
+          <div class="filter-tag" onclick="filterByRestaurant('Chick-fil-A')">Chick-fil-A</div>
+          <div class="filter-tag" onclick="filterByRestaurant('Panda Express')">Panda Express</div>
+          <div class="filter-tag" onclick="filterByRestaurant('Texas Roadhouse')">Texas Roadhouse</div>
+        </div>
+      </div>
+      <div class="content" id="recipeList"></div>
+    </div>
+
+    <!-- RECIPE VIEW -->
+    <div class="recipe-view" id="recipeView">
+      <div class="recipe-header">
+        <button class="back-btn" onclick="backToSearch()">← Back</button>
+        <h1 id="recipeName">Recipe</h1>
+        <div class="recipe-meta" id="recipeMeta"></div>
+      </div>
+      <div class="servings-control">
+        <span class="servings-label">Servings</span>
+        <div class="servings-stepper">
+          <div class="servings-btn" onclick="changeServings(-1)">−</div>
+          <div class="servings-value" id="servingsValue">4</div>
+          <div class="servings-btn" onclick="changeServings(1)">+</div>
+        </div>
+      </div>
+      <div class="view-tabs">
+        <div class="view-tab active" id="ingredientsTab" onclick="switchTab('ingredients')">Ingredients</div>
+        <div class="view-tab" id="instructionsTab" onclick="switchTab('instructions')">Instructions</div>
+      </div>
+      <div class="recipe-list" id="ingredientList"></div>
+      <div class="instructions-list" id="instructionsList"></div>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">
+          <span id="checked">0</span> of <span id="total">0</span> items
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn-secondary" id="resetBtn">↻ Reset</button>
+        <button class="btn-primary" id="shareBtn">↗ Share</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Ingredient amounts are stored as { amount: number|null, unit: string, name: string }
+    // amount = null means it's not scalable (e.g. "to taste", "1 packet")
+    const recipes = {
+      'Olive Garden': {
+        'Chicken Gnocchi Soup': {
+          baseServings: 6,
+          instructions: [
+            'Season chicken breasts with salt and pepper. Heat butter in a large pot over medium-high heat and cook chicken until golden and cooked through, about 6-7 minutes per side. Remove and set aside.',
+            'In the same pot, cook pancetta until crispy, about 5 minutes. Remove and set aside, leaving the fat in the pot.',
+            'Add onion, carrots, and celery to the pot and cook until softened, about 5 minutes. Add garlic and cook 1 minute more.',
+            'Pour in chicken broth and add thyme and Italian seasoning. Bring to a simmer.',
+            'Shred the cooked chicken and return it to the pot along with the pancetta.',
+            'Stir in heavy cream, then add the gnocchi. Simmer until the gnocchi floats to the top, about 3-5 minutes.',
+            'Stir in spinach until wilted. Remove from heat and stir in Parmesan cheese. Season with salt and pepper to taste, then serve.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Boneless, skinless chicken breasts' },
+              { amount: 0.5, unit: 'lb', name: 'Pancetta or bacon, diced' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Yellow onion' },
+              { amount: 2, unit: '', name: 'Carrots' },
+              { amount: 2, unit: '', name: 'Celery stalks' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 3, unit: 'cups', name: 'Fresh spinach' },
+              { amount: null, unit: '', name: 'Fresh thyme (small bunch)' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 3, unit: 'tbsp', name: 'Butter' },
+              { amount: 1.5, unit: 'cups', name: 'Heavy cream' },
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese, grated' }
+            ],
+            'Pantry & Spices': [
+              { amount: 8, unit: 'cups', name: 'Chicken broth' },
+              { amount: 1, unit: 'lb', name: 'Potato gnocchi (frozen or fresh)' },
+              { amount: 1, unit: 'tsp', name: 'Dried Italian seasoning' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ]
+          }
+        },
+        'Breadsticks': {
+          baseServings: 12,
+          instructions: [
+            'Dissolve yeast and sugar in warm water and let sit until foamy, about 5-10 minutes.',
+            'In a large bowl, combine flour and salt. Add the yeast mixture and olive oil, and mix until a dough forms.',
+            'Knead the dough for about 8 minutes until smooth and elastic. Place in a greased bowl, cover, and let rise for 1 hour or until doubled.',
+            'Punch down the dough and divide into 12 pieces. Roll each into a breadstick shape and place on a baking sheet.',
+            'Cover and let rise again for 20-30 minutes. Meanwhile, preheat oven to 400°F.',
+            'Bake for 12-15 minutes until golden brown.',
+            'Melt butter and mix with garlic powder and Italian seasoning. Brush over warm breadsticks and sprinkle with Parmesan cheese.'
+          ],
+          categories: {
+            'Pantry & Spices': [
+              { amount: 3, unit: 'cups', name: 'All-purpose flour' },
+              { amount: null, unit: '', name: 'Yeast (active dry, 1 packet)' },
+              { amount: 1, unit: 'tbsp', name: 'Sugar' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 2, unit: 'tbsp', name: 'Olive oil' },
+              { amount: 1, unit: 'tsp', name: 'Garlic powder' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'tbsp', name: 'Butter' },
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese' }
+            ],
+            'Produce': [
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ]
+          }
+        },
+        'Alfredo Sauce': {
+          baseServings: 4,
+          instructions: [
+            'Melt butter in a saucepan over medium heat. Add minced garlic and cook for 1 minute until fragrant.',
+            'Pour in heavy cream and bring to a gentle simmer, stirring occasionally. Do not boil.',
+            'Reduce heat to low and whisk in Parmesan cheese a little at a time until melted and smooth.',
+            'Season with salt, pepper, and nutmeg. Simmer for 3-5 minutes until slightly thickened.',
+            'Serve immediately over hot pasta.'
+          ],
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' },
+              { amount: 1, unit: 'cup', name: 'Heavy cream' },
+              { amount: 1, unit: 'cup', name: 'Parmesan cheese (freshly grated)' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' },
+              { amount: 0.25, unit: 'tsp', name: 'Nutmeg' }
+            ],
+            'Produce': [
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ]
+          }
+        },
+        'Zuppa Toscana': {
+          baseServings: 6,
+          instructions: [
+            'In a large pot, brown the Italian sausage over medium heat, breaking it apart as it cooks. Remove and set aside.',
+            'Cook bacon in the same pot until crispy. Remove, crumble, and set aside, leaving the fat in the pot.',
+            'Add onion and garlic to the pot and cook until softened, about 4 minutes.',
+            'Pour in chicken broth and add the potatoes. Bring to a boil, then reduce heat and simmer until potatoes are tender, about 15 minutes.',
+            'Return the sausage and bacon to the pot. Stir in heavy cream and red pepper flakes.',
+            'Add the kale and cook until wilted, about 3 minutes. Season with salt and serve hot.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Italian sausage' },
+              { amount: 4, unit: '', name: 'Bacon strips' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Yellow onion' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 4, unit: '', name: 'Russet potatoes' },
+              { amount: 2, unit: 'cups', name: 'Kale, chopped' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Heavy cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 6, unit: 'cups', name: 'Chicken broth' },
+              { amount: 0.5, unit: 'tsp', name: 'Red pepper flakes' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Chicken Parmigiana': {
+          baseServings: 4,
+          instructions: [
+            'Set up a breading station: flour in one dish, beaten eggs in another, and breadcrumbs mixed with Italian seasoning in a third.',
+            'Dredge each chicken breast in flour, then egg, then breadcrumbs, pressing to coat evenly.',
+            'Heat vegetable oil in a large skillet over medium-high heat. Fry the chicken until golden brown on both sides, about 4 minutes per side. Remove and drain on paper towels.',
+            'Preheat oven to 400°F. Spread a thin layer of marinara sauce in a baking dish and place the fried chicken on top.',
+            'Spoon more marinara sauce over each piece, then top with mozzarella and Parmesan cheese.',
+            'Bake for 15-20 minutes until the cheese is melted and bubbly. Serve over pasta if desired.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Chicken breasts, thin cut' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1.5, unit: 'cups', name: 'Mozzarella cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese' },
+              { amount: 2, unit: '', name: 'Eggs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1.5, unit: 'cups', name: 'Breadcrumbs' },
+              { amount: 1, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 24, unit: 'oz', name: 'Marinara sauce' },
+              { amount: 0.5, unit: 'cup', name: 'Vegetable oil' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ]
+          }
+        },
+        'Minestrone Soup': {
+          baseServings: 6,
+          instructions: [
+            'Heat olive oil in a large pot over medium heat. Add onion, carrots, and celery, and cook until softened, about 6 minutes.',
+            'Add garlic and cook for 1 minute more.',
+            'Pour in vegetable broth and crushed tomatoes. Bring to a simmer.',
+            'Add kidney beans, zucchini, and Italian seasoning. Simmer for 15 minutes.',
+            'Add the pasta and cook until al dente, about 8-10 minutes.',
+            'Stir in spinach until wilted. Season with salt and pepper to taste, then serve.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 1, unit: '', name: 'Yellow onion' },
+              { amount: 2, unit: '', name: 'Carrots' },
+              { amount: 2, unit: '', name: 'Celery stalks' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 2, unit: 'cups', name: 'Zucchini, diced' },
+              { amount: 2, unit: 'cups', name: 'Spinach' }
+            ],
+            'Pantry & Spices': [
+              { amount: 6, unit: 'cups', name: 'Vegetable broth' },
+              { amount: 28, unit: 'oz', name: 'Crushed tomatoes' },
+              { amount: 15, unit: 'oz', name: 'Kidney beans, canned' },
+              { amount: 1, unit: 'cup', name: 'Small pasta (ditalini)' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ]
+          }
+        },
+        'Pasta e Fagioli Soup': {
+          baseServings: 6,
+          instructions: [
+            'Brown the ground beef in a large pot over medium-high heat, breaking it apart as it cooks. Drain excess fat.',
+            'Add onion, carrots, and celery to the pot and cook until softened, about 6 minutes. Add garlic and cook 1 minute more.',
+            'Stir in crushed tomatoes, kidney beans, great northern beans, and beef broth. Add Italian seasoning.',
+            'Bring to a boil, then reduce heat and simmer for 20 minutes.',
+            'Add the ditalini pasta and cook until al dente, about 8-10 minutes. Season with salt and pepper and serve.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion, diced' },
+              { amount: 2, unit: '', name: 'Carrots, diced' },
+              { amount: 2, unit: '', name: 'Celery stalks, diced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 28, unit: 'oz', name: 'Crushed tomatoes' },
+              { amount: 15, unit: 'oz', name: 'Kidney beans, canned' },
+              { amount: 15, unit: 'oz', name: 'Great northern beans, canned' },
+              { amount: 4, unit: 'cups', name: 'Beef broth' },
+              { amount: 1.5, unit: 'cups', name: 'Ditalini pasta' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ]
+          }
+        },
+        'Fettuccine Alfredo': {
+          baseServings: 4,
+          instructions: [
+            'Cook fettuccine according to package directions until al dente. Reserve 1 cup pasta water, then drain.',
+            'While pasta cooks, melt butter in a large skillet over medium heat. Add garlic and cook for 1 minute.',
+            'Pour in heavy cream and bring to a gentle simmer. Do not boil.',
+            'Reduce heat to low and whisk in Parmesan cheese gradually until smooth and thickened.',
+            'Add the drained pasta to the sauce and toss to coat, adding reserved pasta water as needed to loosen the sauce.',
+            'Season with salt, pepper, and nutmeg. Serve immediately with extra Parmesan on top.'
+          ],
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' },
+              { amount: 1.5, unit: 'cups', name: 'Heavy cream' },
+              { amount: 1.5, unit: 'cups', name: 'Parmesan cheese, freshly grated' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'lb', name: 'Fettuccine pasta' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' },
+              { amount: 0.25, unit: 'tsp', name: 'Nutmeg' }
+            ],
+            'Produce': [
+              { amount: 2, unit: '', name: 'Garlic cloves' }
+            ]
+          }
+        },
+        'Chicken Alfredo': {
+          baseServings: 4,
+          instructions: [
+            'Season chicken breasts with salt and pepper. Cook in a skillet over medium-high heat until golden and cooked through, about 6-7 minutes per side. Remove, slice, and set aside.',
+            'Cook fettuccine according to package directions until al dente. Reserve 1 cup pasta water, then drain.',
+            'In the same skillet, melt butter and add garlic, cooking for 1 minute.',
+            'Pour in heavy cream and simmer gently, then whisk in Parmesan cheese until smooth.',
+            'Add the pasta to the sauce and toss to coat, thinning with reserved pasta water if needed.',
+            'Top with sliced chicken and serve immediately.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' },
+              { amount: 1.5, unit: 'cups', name: 'Heavy cream' },
+              { amount: 1.5, unit: 'cups', name: 'Parmesan cheese, freshly grated' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'lb', name: 'Fettuccine pasta' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ],
+            'Produce': [
+              { amount: 2, unit: '', name: 'Garlic cloves' }
+            ]
+          }
+        },
+        'Chicken Marsala': {
+          baseServings: 4,
+          instructions: [
+            'Dredge chicken breasts lightly in flour, shaking off excess.',
+            'Heat olive oil and 2 tablespoons butter in a large skillet over medium-high heat. Cook chicken until golden brown, about 4 minutes per side. Remove and set aside.',
+            'Add remaining butter to the skillet and cook mushrooms until browned, about 5 minutes. Add garlic and cook 1 minute more.',
+            'Pour in Marsala wine and scrape up any browned bits from the pan. Simmer for 2-3 minutes.',
+            'Add chicken broth and simmer until slightly reduced, about 5 minutes.',
+            'Stir in heavy cream and return the chicken to the pan. Simmer until the sauce thickens and chicken is heated through, about 5 minutes. Serve hot.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Chicken breasts, thin cut' }
+            ],
+            'Produce': [
+              { amount: 8, unit: 'oz', name: 'Mushrooms, sliced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'tbsp', name: 'Butter' },
+              { amount: 0.5, unit: 'cup', name: 'Heavy cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.75, unit: 'cup', name: 'Marsala wine' },
+              { amount: 1, unit: 'cup', name: 'Chicken broth' },
+              { amount: 0.5, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 2, unit: 'tbsp', name: 'Olive oil' }
+            ]
+          }
+        },
+        'Lasagna Classico': {
+          baseServings: 8,
+          instructions: [
+            'Cook lasagna noodles according to package directions until al dente. Drain and set aside.',
+            'In a large skillet, brown the ground beef and Italian sausage with garlic until fully cooked. Drain excess fat and stir in marinara sauce and Italian seasoning.',
+            'In a bowl, mix ricotta cheese, egg, and half of the Parmesan cheese.',
+            'Preheat oven to 375°F. Spread a thin layer of meat sauce in the bottom of a baking dish.',
+            'Layer noodles, ricotta mixture, meat sauce, and mozzarella cheese. Repeat layers, ending with a generous layer of mozzarella and remaining Parmesan on top.',
+            'Cover with foil and bake for 25 minutes. Remove foil and bake 15 minutes more until bubbly and golden.',
+            'Let rest for 10-15 minutes before slicing and serving.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Ground beef' },
+              { amount: 0.5, unit: 'lb', name: 'Italian sausage' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 15, unit: 'oz', name: 'Ricotta cheese' },
+              { amount: 4, unit: 'cups', name: 'Mozzarella cheese, shredded' },
+              { amount: 1, unit: 'cup', name: 'Parmesan cheese, grated' },
+              { amount: 1, unit: '', name: 'Egg' }
+            ],
+            'Pantry & Spices': [
+              { amount: 12, unit: '', name: 'Lasagna noodles' },
+              { amount: 48, unit: 'oz', name: 'Marinara sauce' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ],
+            'Produce': [
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ]
+          }
+        },
+        'Five Cheese Ziti al Forno': {
+          baseServings: 6,
+          instructions: [
+            'Cook ziti pasta according to package directions until al dente. Drain and set aside.',
+            'In a large bowl, mix ricotta cheese, half the mozzarella, Parmesan, fontina, asiago, and heavy cream.',
+            'Preheat oven to 375°F. Combine the cooked pasta with the cheese mixture and marinara sauce, stirring to coat evenly.',
+            'Transfer to a baking dish and top with remaining mozzarella cheese.',
+            'Bake for 20-25 minutes until bubbly and golden on top. Let rest 5 minutes before serving.'
+          ],
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 15, unit: 'oz', name: 'Ricotta cheese' },
+              { amount: 2, unit: 'cups', name: 'Mozzarella cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese, grated' },
+              { amount: 0.5, unit: 'cup', name: 'Fontina cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Asiago cheese, shredded' },
+              { amount: 1, unit: 'cup', name: 'Heavy cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'lb', name: 'Ziti pasta' },
+              { amount: 24, unit: 'oz', name: 'Marinara sauce' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ]
+          }
+        },
+        'Shrimp Scampi': {
+          baseServings: 4,
+          instructions: [
+            'Cook linguine according to package directions until al dente. Reserve 0.5 cup pasta water, then drain.',
+            'While pasta cooks, melt butter in a large skillet over medium heat. Add garlic and red pepper flakes, cooking until fragrant, about 1 minute.',
+            'Add shrimp to the skillet and cook until pink and opaque, about 2-3 minutes per side. Remove shrimp and set aside.',
+            'Pour white wine and lemon juice into the skillet, scraping up browned bits. Simmer for 2 minutes.',
+            'Return shrimp to the skillet and toss with the pasta, adding reserved pasta water as needed.',
+            'Stir in parsley and serve immediately with lemon wedges.'
+          ],
+          categories: {
+            'Meat & Seafood': [
+              { amount: 1.5, unit: 'lb', name: 'Shrimp, peeled and deveined' }
+            ],
+            'Produce': [
+              { amount: 5, unit: '', name: 'Garlic cloves' },
+              { amount: 2, unit: 'tbsp', name: 'Parsley' },
+              { amount: 1, unit: '', name: 'Lemon' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'tbsp', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'White wine' },
+              { amount: 12, unit: 'oz', name: 'Linguine' },
+              { amount: 0.25, unit: 'tsp', name: 'Red pepper flakes' }
+            ]
+          }
+        },
+        'Steak Gorgonzola Alfredo': {
+          baseServings: 4,
+          instructions: [
+            'Season steak with salt and pepper and grill or pan-sear to desired doneness, about 4-5 minutes per side for medium. Let rest, then slice thin.',
+            'Cook penne pasta according to package directions until al dente. Drain and set aside.',
+            'Melt butter in a large skillet over medium heat. Add heavy cream and bring to a gentle simmer.',
+            'Whisk in Parmesan cheese until smooth, then stir in gorgonzola cheese until melted.',
+            'Add spinach and sun-dried tomatoes, cooking until spinach wilts, about 2 minutes.',
+            'Toss the pasta in the sauce, season with salt and pepper, and top with sliced steak. Serve immediately.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Sirloin steak' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' },
+              { amount: 1.5, unit: 'cups', name: 'Heavy cream' },
+              { amount: 1, unit: 'cup', name: 'Parmesan cheese, grated' },
+              { amount: 0.5, unit: 'cup', name: 'Gorgonzola cheese, crumbled' }
+            ],
+            'Produce': [
+              { amount: 2, unit: 'cups', name: 'Baby spinach' },
+              { amount: 0.5, unit: 'cup', name: 'Sun-dried tomatoes' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'lb', name: 'Penne pasta' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ]
+          }
+        },
+        'Eggplant Parmigiana': {
+          baseServings: 4,
+          instructions: [
+            'Salt the eggplant slices and let sit for 20 minutes to draw out moisture, then pat dry.',
+            'Set up a breading station: flour, beaten eggs, and breadcrumbs mixed with Italian seasoning.',
+            'Dredge each eggplant slice in flour, then egg, then breadcrumbs.',
+            'Heat vegetable oil in a large skillet and fry eggplant slices until golden on both sides. Drain on paper towels.',
+            'Preheat oven to 375°F. Layer a baking dish with marinara sauce, fried eggplant, mozzarella, and Parmesan cheese, repeating layers.',
+            'Bake for 25-30 minutes until bubbly and golden. Let rest 5 minutes before serving.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 2, unit: '', name: 'Eggplants, sliced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Mozzarella cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese' },
+              { amount: 2, unit: '', name: 'Eggs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1.5, unit: 'cups', name: 'Breadcrumbs' },
+              { amount: 1, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 24, unit: 'oz', name: 'Marinara sauce' },
+              { amount: 0.5, unit: 'cup', name: 'Vegetable oil' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ]
+          }
+        }
+      },
+      'Cheesecake Factory': {
+        'Bang Bang Chicken Pasta': {
+          baseServings: 2,
+          categories: {
+            'Meat & Seafood': [
+              { amount: 8, unit: 'oz', name: 'Chicken breast' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Red bell peppers' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 2, unit: '', name: 'Green onions' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Heavy cream' },
+              { amount: 0.25, unit: 'cup', name: 'Parmesan cheese' }
+            ],
+            'Pantry & Spices': [
+              { amount: 8, unit: 'oz', name: 'Pasta (penne)' },
+              { amount: 3, unit: 'tbsp', name: 'Soy sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Sriracha' },
+              { amount: 1, unit: 'tbsp', name: 'Honey' },
+              { amount: 2, unit: 'tbsp', name: 'Oil' }
+            ]
+          }
+        },
+        'Miso Salmon': {
+          baseServings: 2,
+          categories: {
+            'Meat & Seafood': [
+              { amount: 2, unit: '', name: 'Salmon fillets (6 oz each)' }
+            ],
+            'Produce': [
+              { amount: 1, unit: 'lb', name: 'Asparagus' },
+              { amount: 1, unit: 'tbsp', name: 'Ginger, minced' },
+              { amount: 2, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 3, unit: 'tbsp', name: 'Miso paste' },
+              { amount: 2, unit: 'tbsp', name: 'Soy sauce' },
+              { amount: 1, unit: 'tbsp', name: 'Honey' },
+              { amount: 2, unit: 'tbsp', name: 'Oil' },
+              { amount: 1, unit: 'tbsp', name: 'Sesame seeds' }
+            ]
+          }
+        },
+        'Louisiana Chicken Pasta': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Red bell pepper' },
+              { amount: 1, unit: '', name: 'Green bell pepper' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 8, unit: 'oz', name: 'Mushrooms, sliced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Heavy cream' },
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese' }
+            ],
+            'Pantry & Spices': [
+              { amount: 12, unit: 'oz', name: 'Bowtie pasta' },
+              { amount: 2, unit: 'tbsp', name: 'Cajun seasoning' },
+              { amount: 2, unit: 'tbsp', name: 'Butter' }
+            ]
+          }
+        },
+        'Avocado Egg Rolls': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 3, unit: '', name: 'Avocados' },
+              { amount: 0.25, unit: 'cup', name: 'Sun-dried tomatoes' },
+              { amount: 2, unit: 'tbsp', name: 'Cilantro' },
+              { amount: 2, unit: 'tbsp', name: 'Red onion, diced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 12, unit: '', name: 'Egg roll wrappers' },
+              { amount: 2, unit: 'cups', name: 'Vegetable oil (for frying)' },
+              { amount: 1, unit: 'tsp', name: 'Cumin' }
+            ]
+          }
+        },
+        'Cajun Jambalaya Pasta': {
+          baseServings: 4,
+          categories: {
+            'Meat & Seafood': [
+              { amount: 0.5, unit: 'lb', name: 'Shrimp, peeled' },
+              { amount: 0.5, unit: 'lb', name: 'Andouille sausage' },
+              { amount: 0.5, unit: 'lb', name: 'Chicken breast' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 1, unit: '', name: 'Bell pepper' },
+              { amount: 2, unit: '', name: 'Celery stalks' }
+            ],
+            'Pantry & Spices': [
+              { amount: 12, unit: 'oz', name: 'Penne pasta' },
+              { amount: 14.5, unit: 'oz', name: 'Diced tomatoes, canned' },
+              { amount: 2, unit: 'tbsp', name: 'Cajun seasoning' },
+              { amount: 1, unit: 'cup', name: 'Chicken broth' }
+            ]
+          }
+        }
+      },
+      'Panera Bread': {
+        'Broccoli Cheddar Soup': {
+          baseServings: 4,
+          instructions: [
+            'Melt butter in a large pot over medium heat. Add onion, carrots, and celery, and cook until softened, about 5 minutes. Add garlic and cook 1 minute more.',
+            'Sprinkle in flour and stir constantly for 1-2 minutes to cook off the raw flour taste.',
+            'Slowly whisk in vegetable broth and milk, stirring until smooth. Bring to a simmer.',
+            'Add broccoli florets and simmer until tender, about 10-12 minutes.',
+            'Stir in heavy cream, then gradually add cheddar cheese, stirring until melted and smooth.',
+            'Season with salt and pepper. For a smoother texture, blend part of the soup before serving.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 5, unit: 'cups', name: 'Broccoli florets' },
+              { amount: 1, unit: '', name: 'Yellow onion' },
+              { amount: 1, unit: '', name: 'Carrots' },
+              { amount: 1, unit: 'stalk', name: 'Celery' },
+              { amount: 2, unit: '', name: 'Garlic cloves' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Cheddar cheese, shredded' },
+              { amount: 3, unit: 'tbsp', name: 'Butter' },
+              { amount: 1, unit: 'cup', name: 'Heavy cream' },
+              { amount: 2, unit: 'cups', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Vegetable broth' },
+              { amount: 2, unit: 'tbsp', name: 'All-purpose flour' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ]
+          }
+        },
+        'Mac and Cheese': {
+          baseServings: 6,
+          instructions: [
+            'Cook elbow macaroni according to package directions until al dente. Drain and set aside.',
+            'Melt butter in a large saucepan over medium heat. Whisk in flour and cook for 1-2 minutes.',
+            'Gradually whisk in milk, stirring constantly until the mixture thickens, about 5 minutes.',
+            'Reduce heat to low and stir in sharp cheddar and white cheddar cheese until melted and smooth.',
+            'Season with salt and paprika. Fold in the cooked macaroni until evenly coated.',
+            'Serve immediately, or transfer to a baking dish, top with extra cheese, and broil until bubbly.'
+          ],
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'cups', name: 'Sharp cheddar cheese, shredded' },
+              { amount: 2, unit: 'cups', name: 'White cheddar, shredded' },
+              { amount: 4, unit: 'tbsp', name: 'Butter' },
+              { amount: 3, unit: 'cups', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'lb', name: 'Elbow macaroni' },
+              { amount: 0.25, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.25, unit: 'tsp', name: 'Paprika' }
+            ]
+          }
+        },
+        'Autumn Squash Soup': {
+          baseServings: 4,
+          instructions: [
+            'Peel and cube the butternut squash. Peel and chop the apple, onion, and carrots.',
+            'Heat a large pot over medium heat and cook onion and carrots until softened, about 5 minutes.',
+            'Add squash, apple, and curry powder, stirring to coat. Cook for 2 minutes until fragrant.',
+            'Pour in vegetable broth and bring to a boil. Reduce heat and simmer until squash is very tender, about 20 minutes.',
+            'Blend the soup until smooth using an immersion blender or in batches in a regular blender.',
+            'Stir in heavy cream and maple syrup. Season with salt to taste and serve warm.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 2, unit: 'lb', name: 'Butternut squash' },
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 2, unit: '', name: 'Carrots' },
+              { amount: 1, unit: '', name: 'Apple' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Heavy cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Vegetable broth' },
+              { amount: 1, unit: 'tbsp', name: 'Curry powder' },
+              { amount: 2, unit: 'tbsp', name: 'Maple syrup' }
+            ]
+          }
+        },
+        'Green Goddess Cobb Salad': {
+          baseServings: 2,
+          instructions: [
+            'Cook bacon until crispy, then crumble. Hard boil the eggs, cool, peel, and slice.',
+            'Grill or pan-sear the chicken breast, seasoned with salt and pepper, until cooked through. Let rest, then slice.',
+            'Arrange the chopped romaine lettuce on a large plate or in bowls.',
+            'Top with rows of sliced chicken, bacon, sliced egg, avocado, and cherry tomatoes.',
+            'Sprinkle with feta cheese and chives.',
+            'Drizzle with green goddess dressing just before serving, or serve on the side.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 6, unit: 'cups', name: 'Romaine lettuce, chopped' },
+              { amount: 1, unit: '', name: 'Avocado' },
+              { amount: 1, unit: 'cup', name: 'Cherry tomatoes' },
+              { amount: 2, unit: 'tbsp', name: 'Chives' }
+            ],
+            'Meat & Deli': [
+              { amount: 8, unit: 'oz', name: 'Grilled chicken breast' },
+              { amount: 3, unit: '', name: 'Bacon strips' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: '', name: 'Hard boiled eggs' },
+              { amount: 0.25, unit: 'cup', name: 'Feta cheese' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Green goddess dressing' }
+            ]
+          }
+        },
+        'Chicken Noodle Soup': {
+          baseServings: 6,
+          instructions: [
+            'In a large pot, combine chicken breast, onion, carrots, celery, garlic, and chicken broth. Bring to a boil.',
+            'Reduce heat and simmer until chicken is cooked through, about 15-20 minutes.',
+            'Remove the chicken, shred it with two forks, and set aside.',
+            'Return the broth to a simmer and add the egg noodles. Cook until tender, about 6-8 minutes.',
+            'Return the shredded chicken to the pot along with fresh dill.',
+            'Season with salt and pepper to taste and serve hot.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 3, unit: '', name: 'Carrots' },
+              { amount: 3, unit: '', name: 'Celery stalks' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 2, unit: 'tbsp', name: 'Fresh dill' }
+            ],
+            'Pantry & Spices': [
+              { amount: 8, unit: 'cups', name: 'Chicken broth' },
+              { amount: 2, unit: 'cups', name: 'Egg noodles' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ]
+          }
+        },
+        'Chicken and Wild Rice Soup': {
+          baseServings: 6,
+          instructions: [
+            'Melt butter in a large pot over medium heat. Add onion, carrots, and celery, and cook until softened, about 5 minutes.',
+            'Sprinkle in flour and stir for 1-2 minutes to cook off the raw taste.',
+            'Slowly whisk in chicken broth until smooth. Add wild rice and thyme.',
+            'Add the chicken breast whole to the pot. Bring to a boil, then reduce heat and simmer until chicken is cooked through and rice is tender, about 35-40 minutes.',
+            'Remove the chicken, shred it, and return it to the pot.',
+            'Stir in heavy cream and season with salt and pepper. Simmer 5 more minutes and serve.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 2, unit: '', name: 'Carrots' },
+              { amount: 2, unit: '', name: 'Celery stalks' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Heavy cream' },
+              { amount: 3, unit: 'tbsp', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 6, unit: 'cups', name: 'Chicken broth' },
+              { amount: 1, unit: 'cup', name: 'Wild rice' },
+              { amount: 0.25, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 1, unit: 'tsp', name: 'Thyme' }
+            ]
+          }
+        },
+        'Creamy Tomato Soup': {
+          baseServings: 4,
+          instructions: [
+            'Melt butter in a large pot over medium heat. Add onion and cook until softened, about 5 minutes. Add garlic and cook 1 minute more.',
+            'Stir in crushed tomatoes and vegetable broth. Bring to a simmer.',
+            'Add sugar and salt, then simmer for 20 minutes to let the flavors develop.',
+            'Blend the soup until smooth using an immersion blender or in batches in a regular blender.',
+            'Stir in heavy cream and fresh basil. Simmer 5 more minutes and serve warm.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 4, unit: '', name: 'Garlic cloves' },
+              { amount: 0.25, unit: 'cup', name: 'Fresh basil' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Heavy cream' },
+              { amount: 3, unit: 'tbsp', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 56, unit: 'oz', name: 'Crushed tomatoes, canned' },
+              { amount: 3, unit: 'cups', name: 'Vegetable broth' },
+              { amount: 2, unit: 'tbsp', name: 'Sugar' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Baked Potato Soup': {
+          baseServings: 6,
+          instructions: [
+            'Cook bacon until crispy, then crumble and set aside, reserving 2 tablespoons of fat in the pot.',
+            'Add onion to the pot and cook until softened, about 5 minutes.',
+            'Sprinkle in flour and stir for 1-2 minutes, then whisk in chicken broth until smooth.',
+            'Add the potatoes and bring to a boil. Reduce heat and simmer until potatoes are tender, about 15-20 minutes.',
+            'Mash some of the potatoes directly in the pot for a thicker texture, or blend part of the soup.',
+            'Stir in heavy cream, sour cream, and half the cheddar cheese until melted.',
+            'Top each bowl with remaining cheddar cheese, crumbled bacon, and green onions.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 5, unit: '', name: 'Russet potatoes' },
+              { amount: 0.5, unit: '', name: 'Onion, diced' },
+              { amount: 3, unit: '', name: 'Green onions' }
+            ],
+            'Meat & Deli': [
+              { amount: 6, unit: '', name: 'Bacon strips' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Cheddar cheese, shredded' },
+              { amount: 1, unit: 'cup', name: 'Sour cream' },
+              { amount: 0.5, unit: 'cup', name: 'Heavy cream' },
+              { amount: 3, unit: 'tbsp', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Chicken broth' },
+              { amount: 0.25, unit: 'cup', name: 'All-purpose flour' }
+            ]
+          }
+        },
+        'Ten Vegetable Soup': {
+          baseServings: 6,
+          instructions: [
+            'Heat a large pot over medium heat and cook onion, carrots, and celery until softened, about 6 minutes.',
+            'Add garlic and cook 1 minute more.',
+            'Pour in vegetable broth and add tomatoes, Italian seasoning, and salt. Bring to a simmer.',
+            'Add zucchini and green beans, and simmer for 10 minutes.',
+            'Stir in corn and peas, and simmer 5 more minutes until all vegetables are tender.',
+            'Taste and adjust seasoning, then serve hot.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 2, unit: '', name: 'Carrots' },
+              { amount: 2, unit: '', name: 'Celery stalks' },
+              { amount: 1, unit: '', name: 'Zucchini' },
+              { amount: 1, unit: 'cup', name: 'Green beans' },
+              { amount: 1, unit: 'cup', name: 'Corn kernels' },
+              { amount: 1, unit: 'cup', name: 'Peas' },
+              { amount: 2, unit: '', name: 'Tomatoes, diced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 6, unit: 'cups', name: 'Vegetable broth' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Turkey Chili': {
+          baseServings: 6,
+          instructions: [
+            'In a large pot, cook ground turkey over medium-high heat until browned, breaking it apart as it cooks.',
+            'Add onion and bell pepper, and cook until softened, about 5 minutes. Add garlic and cook 1 minute more.',
+            'Stir in crushed tomatoes, kidney beans, black beans, chili powder, and cumin.',
+            'Bring to a boil, then reduce heat and simmer for 25-30 minutes, stirring occasionally.',
+            'Season with salt to taste and serve hot, topped with your favorite chili garnishes.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Ground turkey' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion, diced' },
+              { amount: 1, unit: '', name: 'Bell pepper, diced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 28, unit: 'oz', name: 'Crushed tomatoes' },
+              { amount: 15, unit: 'oz', name: 'Kidney beans, canned' },
+              { amount: 15, unit: 'oz', name: 'Black beans, canned' },
+              { amount: 2, unit: 'tbsp', name: 'Chili powder' },
+              { amount: 1, unit: 'tsp', name: 'Cumin' }
+            ]
+          }
+        },
+        'Bacon Turkey Bravo Sandwich': {
+          baseServings: 2,
+          instructions: [
+            'Cook the bacon until crispy and set aside.',
+            'Slice the bread loaves in half horizontally. Spread mayonnaise on both cut sides.',
+            'Layer turkey breast, smoked gouda cheese, bacon, tomato slices, and lettuce on the bottom half.',
+            'Top with the other bread half and press gently.',
+            'Optionally, warm the sandwich in a panini press or skillet until the cheese melts, then slice and serve.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 8, unit: 'oz', name: 'Sliced turkey breast' },
+              { amount: 6, unit: '', name: 'Bacon strips' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: '', name: 'Smoked gouda cheese slices' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Tomato, sliced' },
+              { amount: 1, unit: 'cup', name: 'Lettuce' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: '', name: 'Tomato basil bread loaves or ciabatta' },
+              { amount: 3, unit: 'tbsp', name: 'Mayonnaise' }
+            ]
+          }
+        },
+        'Chicken Bacon Ranch Sandwich': {
+          baseServings: 2,
+          instructions: [
+            'Grill or pan-sear the chicken breast, seasoned with salt and pepper, until cooked through. Let rest, then slice.',
+            'Cook bacon until crispy.',
+            'Slice the ciabatta rolls in half and spread ranch dressing on both cut sides.',
+            'Layer chicken, cheddar cheese, bacon, lettuce, and tomato on the bottom half.',
+            'Top with the other roll half and serve, warming in a panini press if desired to melt the cheese.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 8, unit: 'oz', name: 'Grilled chicken breast' },
+              { amount: 6, unit: '', name: 'Bacon strips' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: '', name: 'Cheddar cheese slices' }
+            ],
+            'Produce': [
+              { amount: 1, unit: 'cup', name: 'Lettuce' },
+              { amount: 1, unit: '', name: 'Tomato, sliced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: '', name: 'Ciabatta rolls' },
+              { amount: 3, unit: 'tbsp', name: 'Ranch dressing' }
+            ]
+          }
+        },
+        'Napa Almond Chicken Salad Sandwich': {
+          baseServings: 4,
+          instructions: [
+            'In a large bowl, combine the diced chicken, celery, and halved grapes.',
+            'Add mayonnaise and stir to coat evenly.',
+            'Fold in the sliced almonds.',
+            'Season with salt and pepper to taste.',
+            'Spread the chicken salad onto slices of whole grain bread and top with a second slice to make sandwiches.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'cups', name: 'Chicken breast, cooked and diced' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Celery stalk, diced' },
+              { amount: 0.5, unit: 'cup', name: 'Red grapes, halved' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Mayonnaise' },
+              { amount: 0.5, unit: 'cup', name: 'Sliced almonds' },
+              { amount: 8, unit: 'slices', name: 'Whole grain bread' }
+            ]
+          }
+        },
+        'Mediterranean Bowl': {
+          baseServings: 2,
+          instructions: [
+            'Cook the quinoa according to package directions and let cool slightly.',
+            'In a large bowl, layer the romaine lettuce and cooked quinoa as the base.',
+            'Top with cherry tomatoes, cucumber, red onion, and chickpeas.',
+            'Sprinkle with feta cheese and Kalamata olives.',
+            'Drizzle with lemon herb dressing just before serving.'
+          ],
+          categories: {
+            'Produce': [
+              { amount: 2, unit: 'cups', name: 'Romaine lettuce, chopped' },
+              { amount: 1, unit: 'cup', name: 'Cherry tomatoes' },
+              { amount: 0.5, unit: '', name: 'Cucumber, diced' },
+              { amount: 0.25, unit: 'cup', name: 'Red onion, sliced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Feta cheese, crumbled' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'Quinoa, cooked' },
+              { amount: 15, unit: 'oz', name: 'Chickpeas, canned' },
+              { amount: 0.25, unit: 'cup', name: 'Kalamata olives' },
+              { amount: 0.25, unit: 'cup', name: 'Lemon herb dressing' }
+            ]
+          }
+        },
+        'Steak and White Cheddar Panini': {
+          baseServings: 2,
+          instructions: [
+            'Season the steak with salt and pepper and sear in a hot skillet until cooked to your liking. Let rest, then slice thin.',
+            'In the same skillet, sauté the onion and bell pepper until softened, about 5 minutes.',
+            'Slice the ciabatta rolls in half and spread horseradish sauce on both cut sides.',
+            'Layer sliced steak, sautéed vegetables, and white cheddar cheese on the bottom half.',
+            'Top with the other roll half. Butter the outside of the roll and grill in a panini press or skillet until golden and the cheese melts.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 8, unit: 'oz', name: 'Steak, sliced thin' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: '', name: 'White cheddar cheese slices' }
+            ],
+            'Produce': [
+              { amount: 0.5, unit: '', name: 'Onion, sliced' },
+              { amount: 0.5, unit: '', name: 'Bell pepper, sliced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: '', name: 'Ciabatta rolls' },
+              { amount: 2, unit: 'tbsp', name: 'Horseradish sauce' },
+              { amount: 1, unit: 'tbsp', name: 'Butter' }
+            ]
+          }
+        },
+        'Fuji Apple Salad with Chicken': {
+          baseServings: 2,
+          instructions: [
+            'Grill or pan-sear the chicken breast, seasoned with salt and pepper, until cooked through. Let rest, then slice.',
+            'Arrange the mixed greens in a large bowl or on plates.',
+            'Top with sliced apple, dried cherries, candied pecans, and gorgonzola cheese.',
+            'Add the sliced chicken on top.',
+            'Drizzle with apple cider vinaigrette just before serving.'
+          ],
+          categories: {
+            'Meat & Deli': [
+              { amount: 8, unit: 'oz', name: 'Grilled chicken breast' }
+            ],
+            'Produce': [
+              { amount: 6, unit: 'cups', name: 'Mixed greens' },
+              { amount: 1, unit: '', name: 'Fuji apple, sliced' },
+              { amount: 0.25, unit: 'cup', name: 'Dried cherries' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.25, unit: 'cup', name: 'Gorgonzola cheese, crumbled' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.25, unit: 'cup', name: 'Pecans, candied' },
+              { amount: 0.25, unit: 'cup', name: 'Apple cider vinaigrette' }
+            ]
+          }
+        }
+      },
+      'Chipotle': {
+        'Barbacoa': {
+          baseServings: 4,
+          categories: {
+            'Meat & Seafood': [
+              { amount: 3, unit: 'lbs', name: 'Beef chuck roast' }
+            ],
+            'Produce': [
+              { amount: 6, unit: '', name: 'Garlic cloves' },
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 0.25, unit: 'cup', name: 'Cilantro' },
+              { amount: 2, unit: '', name: 'Lime' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'tsp', name: 'Cumin' },
+              { amount: 1, unit: 'tsp', name: 'Oregano' },
+              { amount: 2, unit: '', name: 'Bay leaves' },
+              { amount: 2.5, unit: '', name: 'Chipotles in adobo' },
+              { amount: 1.5, unit: 'cups', name: 'Beef broth' },
+              { amount: 2, unit: 'tbsp', name: 'Apple cider vinegar' }
+            ]
+          }
+        },
+        'Cilantro Lime Rice': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 0.25, unit: 'cup', name: 'Cilantro, chopped' },
+              { amount: 2, unit: '', name: 'Limes' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'Long grain white rice' },
+              { amount: 2.5, unit: 'cups', name: 'Water' },
+              { amount: 1, unit: 'tbsp', name: 'Olive oil' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Chipotle Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Boneless chicken thighs' }
+            ],
+            'Produce': [
+              { amount: 4, unit: '', name: 'Garlic cloves' },
+              { amount: 1, unit: '', name: 'Lime' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: '', name: 'Chipotles in adobo' },
+              { amount: 2, unit: 'tbsp', name: 'Olive oil' },
+              { amount: 2, unit: 'tsp', name: 'Cumin' },
+              { amount: 1, unit: 'tsp', name: 'Oregano' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Guacamole': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Avocados' },
+              { amount: 0.25, unit: '', name: 'Red onion, diced' },
+              { amount: 2, unit: 'tbsp', name: 'Cilantro' },
+              { amount: 1, unit: '', name: 'Jalapeno' },
+              { amount: 1, unit: '', name: 'Lime' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Corn Salsa': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 2, unit: 'cups', name: 'Corn kernels' },
+              { amount: 0.5, unit: '', name: 'Red onion, diced' },
+              { amount: 1, unit: '', name: 'Jalapeno' },
+              { amount: 0.25, unit: 'cup', name: 'Cilantro' },
+              { amount: 1, unit: '', name: 'Lime' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        }
+      },
+      "Chili's": {
+        'Baby Back Ribs': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: '', name: 'Racks baby back ribs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1.5, unit: 'cups', name: 'BBQ sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Brown sugar' },
+              { amount: 1, unit: 'tbsp', name: 'Paprika' },
+              { amount: 1, unit: 'tsp', name: 'Garlic powder' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Southwestern Eggrolls': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'cup', name: 'Chicken breast, cooked and diced' }
+            ],
+            'Produce': [
+              { amount: 0.5, unit: 'cup', name: 'Corn kernels' },
+              { amount: 0.5, unit: 'cup', name: 'Spinach, chopped' },
+              { amount: 2, unit: '', name: 'Green onions' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Monterey jack cheese, shredded' }
+            ],
+            'Pantry & Spices': [
+              { amount: 15, unit: 'oz', name: 'Black beans, canned' },
+              { amount: 8, unit: '', name: 'Egg roll wrappers' },
+              { amount: 1, unit: 'tsp', name: 'Cumin' }
+            ]
+          }
+        },
+        'Skillet Queso': {
+          baseServings: 6,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 16, unit: 'oz', name: 'Velveeta cheese' },
+              { amount: 1, unit: 'cup', name: 'Cheddar cheese, shredded' }
+            ],
+            'Meat & Deli': [
+              { amount: 0.5, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Jalapeno' },
+              { amount: 0.25, unit: '', name: 'Onion, diced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 10, unit: 'oz', name: 'Diced tomatoes with green chiles' },
+              { amount: 1, unit: 'tsp', name: 'Cumin' }
+            ]
+          }
+        },
+        'Chicken Fajitas': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast, sliced' }
+            ],
+            'Produce': [
+              { amount: 2, unit: '', name: 'Bell peppers, sliced' },
+              { amount: 1, unit: '', name: 'Onion, sliced' },
+              { amount: 2, unit: '', name: 'Limes' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'tbsp', name: 'Fajita seasoning' },
+              { amount: 2, unit: 'tbsp', name: 'Olive oil' },
+              { amount: 8, unit: '', name: 'Flour tortillas' }
+            ]
+          }
+        }
+      },
+      "Applebee's": {
+        'Bourbon Street Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast, cubed' }
+            ],
+            'Produce': [
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 1, unit: '', name: 'Green onions' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.25, unit: 'cup', name: 'Brown sugar' },
+              { amount: 0.25, unit: 'cup', name: 'Soy sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Ketchup' },
+              { amount: 2, unit: 'tbsp', name: 'Apple juice' },
+              { amount: 1, unit: 'tsp', name: 'Ground ginger' }
+            ]
+          }
+        },
+        'Spinach Artichoke Dip': {
+          baseServings: 6,
+          categories: {
+            'Produce': [
+              { amount: 2, unit: 'cups', name: 'Spinach, chopped' },
+              { amount: 14, unit: 'oz', name: 'Artichoke hearts, canned' },
+              { amount: 2, unit: '', name: 'Garlic cloves' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 8, unit: 'oz', name: 'Cream cheese' },
+              { amount: 1, unit: 'cup', name: 'Parmesan cheese' },
+              { amount: 0.5, unit: 'cup', name: 'Mozzarella, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Sour cream' }
+            ]
+          }
+        },
+        'Riblets': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Pork riblets' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1.5, unit: 'cups', name: 'BBQ sauce' },
+              { amount: 1, unit: 'tbsp', name: 'Smoked paprika' },
+              { amount: 1, unit: 'tsp', name: 'Garlic powder' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        }
+      },
+      "TGI Fridays": {
+        "Jack Daniel's Glazed Ribs": {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: '', name: 'Racks pork ribs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'Whiskey' },
+              { amount: 0.5, unit: 'cup', name: 'Brown sugar' },
+              { amount: 0.5, unit: 'cup', name: 'Soy sauce' },
+              { amount: 0.25, unit: 'cup', name: 'Pineapple juice' },
+              { amount: 2, unit: 'tbsp', name: 'Ketchup' }
+            ]
+          }
+        },
+        'Loaded Potato Skins': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Russet potatoes' },
+              { amount: 2, unit: '', name: 'Green onions' }
+            ],
+            'Meat & Deli': [
+              { amount: 6, unit: '', name: 'Bacon strips' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1.5, unit: 'cups', name: 'Cheddar cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Sour cream' }
+            ]
+          }
+        },
+        'Mozzarella Sticks': {
+          baseServings: 6,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 12, unit: '', name: 'Mozzarella cheese sticks' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 2, unit: '', name: 'Eggs' },
+              { amount: 1.5, unit: 'cups', name: 'Breadcrumbs' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' },
+              { amount: 3, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        }
+      },
+      "Red Lobster": {
+        'Cheddar Bay Biscuits': {
+          baseServings: 12,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 1.5, unit: 'cups', name: 'Cheddar cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Butter' },
+              { amount: 1.25, unit: 'cups', name: 'Buttermilk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2.5, unit: 'cups', name: 'Bisquick mix' },
+              { amount: 1, unit: 'tsp', name: 'Garlic powder' },
+              { amount: 1, unit: 'tsp', name: 'Dried parsley' }
+            ]
+          }
+        },
+        'Shrimp Scampi': {
+          baseServings: 4,
+          categories: {
+            'Meat & Seafood': [
+              { amount: 1.5, unit: 'lb', name: 'Shrimp, peeled and deveined' }
+            ],
+            'Produce': [
+              { amount: 5, unit: '', name: 'Garlic cloves' },
+              { amount: 2, unit: 'tbsp', name: 'Parsley' },
+              { amount: 1, unit: '', name: 'Lemon' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'tbsp', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'White wine' },
+              { amount: 12, unit: 'oz', name: 'Linguine' }
+            ]
+          }
+        },
+        'Clam Chowder': {
+          baseServings: 6,
+          categories: {
+            'Meat & Seafood': [
+              { amount: 2, unit: 'cans', name: 'Chopped clams' },
+              { amount: 4, unit: '', name: 'Bacon strips' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 3, unit: '', name: 'Russet potatoes' },
+              { amount: 2, unit: '', name: 'Celery stalks' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Heavy cream' },
+              { amount: 3, unit: 'tbsp', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.25, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 2, unit: 'cups', name: 'Clam juice' }
+            ]
+          }
+        }
+      },
+      "Texas Roadhouse": {
+        'Rolls with Cinnamon Butter': {
+          baseServings: 12,
+          categories: {
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'All-purpose flour' },
+              { amount: null, unit: '', name: 'Active dry yeast (1 packet)' },
+              { amount: 0.25, unit: 'cup', name: 'Sugar' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter, softened' },
+              { amount: 1, unit: 'cup', name: 'Milk' },
+              { amount: 1, unit: '', name: 'Egg' }
+            ],
+            'Produce': [
+              { amount: 1, unit: 'tsp', name: 'Ground cinnamon' }
+            ]
+          }
+        },
+        'Steak Seasoning & Marinade': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Steaks (ribeye or sirloin)' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'tbsp', name: 'Kosher salt' },
+              { amount: 1, unit: 'tbsp', name: 'Black pepper' },
+              { amount: 1, unit: 'tbsp', name: 'Garlic powder' },
+              { amount: 1, unit: 'tbsp', name: 'Paprika' },
+              { amount: 0.25, unit: 'cup', name: 'Worcestershire sauce' }
+            ]
+          }
+        },
+        'Cactus Blossom': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 1, unit: '', name: 'Large yellow onion' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 2, unit: 'tsp', name: 'Cayenne pepper' },
+              { amount: 2, unit: 'cups', name: 'Buttermilk' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Mayonnaise' }
+            ]
+          }
+        }
+      },
+      "P.F. Chang's": {
+        'Lettuce Wraps': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Ground chicken' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Head iceberg lettuce' },
+              { amount: 8, unit: 'oz', name: 'Water chestnuts, diced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 2, unit: '', name: 'Green onions' }
+            ],
+            'Pantry & Spices': [
+              { amount: 3, unit: 'tbsp', name: 'Soy sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Hoisin sauce' },
+              { amount: 1, unit: 'tbsp', name: 'Rice vinegar' },
+              { amount: 1, unit: 'tbsp', name: 'Sesame oil' }
+            ]
+          }
+        },
+        'Mongolian Beef': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Flank steak, sliced' }
+            ],
+            'Produce': [
+              { amount: 4, unit: '', name: 'Green onions' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 1, unit: 'tbsp', name: 'Ginger, minced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Soy sauce' },
+              { amount: 0.5, unit: 'cup', name: 'Brown sugar' },
+              { amount: 0.5, unit: 'cup', name: 'Cornstarch' },
+              { amount: 0.5, unit: 'cup', name: 'Vegetable oil' }
+            ]
+          }
+        },
+        'Orange Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast, cubed' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Orange, zested and juiced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 1, unit: 'tbsp', name: 'Ginger, minced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Cornstarch' },
+              { amount: 0.25, unit: 'cup', name: 'Soy sauce' },
+              { amount: 0.5, unit: 'cup', name: 'Sugar' },
+              { amount: 2, unit: 'tbsp', name: 'Rice vinegar' },
+              { amount: 2, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Fried Rice': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 2, unit: '', name: 'Green onions' },
+              { amount: 0.5, unit: 'cup', name: 'Carrots, diced' },
+              { amount: 0.5, unit: 'cup', name: 'Peas' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: '', name: 'Eggs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Cooked white rice (day-old)' },
+              { amount: 3, unit: 'tbsp', name: 'Soy sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Sesame oil' }
+            ]
+          }
+        }
+      },
+      "Panda Express": {
+        'Orange Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast, cubed' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Orange, zested and juiced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Cornstarch' },
+              { amount: 0.25, unit: 'cup', name: 'Soy sauce' },
+              { amount: 0.5, unit: 'cup', name: 'Sugar' },
+              { amount: 2, unit: 'tbsp', name: 'Rice vinegar' },
+              { amount: 2, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Beijing Beef': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Flank steak, sliced' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Bell pepper' },
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Cornstarch' },
+              { amount: 3, unit: 'tbsp', name: 'Ketchup' },
+              { amount: 2, unit: 'tbsp', name: 'Sugar' },
+              { amount: 2, unit: 'tbsp', name: 'Rice vinegar' },
+              { amount: 2, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Chow Mein': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 2, unit: 'cups', name: 'Cabbage, shredded' },
+              { amount: 1, unit: 'cup', name: 'Celery, sliced' },
+              { amount: 3, unit: '', name: 'Green onions' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'lb', name: 'Chow mein noodles' },
+              { amount: 0.25, unit: 'cup', name: 'Soy sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Oyster sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Vegetable oil' }
+            ]
+          }
+        },
+        'Kung Pao Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Chicken breast, cubed' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Bell pepper' },
+              { amount: 3, unit: '', name: 'Garlic cloves' },
+              { amount: 4, unit: '', name: 'Green onions' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Peanuts' },
+              { amount: 0.25, unit: 'cup', name: 'Soy sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Rice vinegar' },
+              { amount: 1, unit: 'tbsp', name: 'Chili paste' },
+              { amount: 2, unit: 'tbsp', name: 'Vegetable oil' }
+            ]
+          }
+        }
+      },
+      "Taco Bell": {
+        'Crunchwrap Supreme': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 2, unit: 'cups', name: 'Lettuce, shredded' },
+              { amount: 1, unit: '', name: 'Tomato, diced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Cheddar cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Sour cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Large flour tortillas' },
+              { amount: 4, unit: '', name: 'Tostada shells' },
+              { amount: 0.5, unit: 'cup', name: 'Nacho cheese sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Taco seasoning' }
+            ]
+          }
+        },
+        'Mexican Pizza': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Tomato, diced' },
+              { amount: 2, unit: '', name: 'Green onions' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1.5, unit: 'cups', name: 'Cheddar cheese, shredded' }
+            ],
+            'Pantry & Spices': [
+              { amount: 8, unit: '', name: 'Tostada shells' },
+              { amount: 16, unit: 'oz', name: 'Refried beans' },
+              { amount: 1, unit: 'cup', name: 'Red enchilada sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Taco seasoning' }
+            ]
+          }
+        },
+        'Cheesy Gordita Crunch': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: 'cup', name: 'Lettuce, shredded' },
+              { amount: 1, unit: '', name: 'Tomato, diced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1.5, unit: 'cups', name: 'Cheddar cheese, shredded' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Flatbreads' },
+              { amount: 4, unit: '', name: 'Crunchy taco shells' },
+              { amount: 2, unit: 'tbsp', name: 'Taco seasoning' }
+            ]
+          }
+        }
+      },
+      "In-N-Out": {
+        'Animal Style Fries': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Russet potatoes' },
+              { amount: 0.5, unit: '', name: 'Onion, diced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Cheddar cheese, shredded' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Mayonnaise' },
+              { amount: 2, unit: 'tbsp', name: 'Ketchup' },
+              { amount: 1, unit: 'tbsp', name: 'Sweet relish' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Secret Sauce Double-Double': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Tomato, sliced' },
+              { amount: 1, unit: '', name: 'Onion, sliced' },
+              { amount: 4, unit: 'leaves', name: 'Lettuce' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 8, unit: '', name: 'American cheese slices' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Hamburger buns' },
+              { amount: 0.5, unit: 'cup', name: 'Mayonnaise' },
+              { amount: 2, unit: 'tbsp', name: 'Ketchup' },
+              { amount: 1, unit: 'tbsp', name: 'Sweet relish' }
+            ]
+          }
+        }
+      },
+      "Starbucks": {
+        'Pumpkin Spice Latte': {
+          baseServings: 2,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Strong brewed coffee or espresso' },
+              { amount: 3, unit: 'tbsp', name: 'Pumpkin puree' },
+              { amount: 2, unit: 'tbsp', name: 'Sugar' },
+              { amount: 1, unit: 'tsp', name: 'Pumpkin pie spice' },
+              { amount: 1, unit: 'tsp', name: 'Vanilla extract' }
+            ]
+          }
+        },
+        'Lemon Loaf': {
+          baseServings: 8,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' },
+              { amount: 3, unit: '', name: 'Eggs' },
+              { amount: 0.5, unit: 'cup', name: 'Sour cream' }
+            ],
+            'Produce': [
+              { amount: 2, unit: '', name: 'Lemons, zested and juiced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1.5, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 1, unit: 'cup', name: 'Sugar' },
+              { amount: 1, unit: 'tsp', name: 'Baking powder' },
+              { amount: 1, unit: 'cup', name: 'Powdered sugar (for glaze)' }
+            ]
+          }
+        },
+        'Egg Bites': {
+          baseServings: 6,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 6, unit: '', name: 'Eggs' },
+              { amount: 0.5, unit: 'cup', name: 'Cottage cheese' },
+              { amount: 0.5, unit: 'cup', name: 'Monterey jack cheese, shredded' }
+            ],
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Bacon strips, cooked' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'tsp', name: 'Salt' },
+              { amount: 0.25, unit: 'tsp', name: 'Hot sauce' }
+            ]
+          }
+        }
+      },
+      "Popeyes": {
+        'Fried Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 3, unit: 'lb', name: 'Chicken pieces (bone-in)' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Buttermilk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 1, unit: 'tbsp', name: 'Cayenne pepper' },
+              { amount: 1, unit: 'tbsp', name: 'Paprika' },
+              { amount: 1, unit: 'tbsp', name: 'Garlic powder' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Red Beans and Rice': {
+          baseServings: 6,
+          categories: {
+            'Meat & Deli': [
+              { amount: 0.5, unit: 'lb', name: 'Andouille sausage, sliced' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion' },
+              { amount: 1, unit: '', name: 'Bell pepper' },
+              { amount: 2, unit: '', name: 'Celery stalks' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 30, unit: 'oz', name: 'Red beans, canned' },
+              { amount: 4, unit: 'cups', name: 'Chicken broth' },
+              { amount: 2, unit: 'cups', name: 'White rice' },
+              { amount: 1, unit: 'tsp', name: 'Cajun seasoning' }
+            ]
+          }
+        },
+        'Buttermilk Biscuits': {
+          baseServings: 8,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 0.75, unit: 'cup', name: 'Buttermilk' },
+              { amount: 0.5, unit: 'cup', name: 'Butter, cold' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 1, unit: 'tbsp', name: 'Baking powder' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 2, unit: 'tbsp', name: 'Sugar' }
+            ]
+          }
+        }
+      },
+      "KFC": {
+        'Fried Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 3, unit: 'lb', name: 'Chicken pieces (bone-in)' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: '', name: 'Eggs' },
+              { amount: 1, unit: 'cup', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 2, unit: 'tsp', name: 'Paprika' },
+              { amount: 1, unit: 'tsp', name: 'Garlic salt' },
+              { amount: 1, unit: 'tsp', name: 'Black pepper' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Coleslaw': {
+          baseServings: 6,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: 'cups', name: 'Cabbage, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Carrots, shredded' },
+              { amount: 0.25, unit: '', name: 'Onion, minced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.75, unit: 'cup', name: 'Mayonnaise' },
+              { amount: 0.25, unit: 'cup', name: 'Sugar' },
+              { amount: 2, unit: 'tbsp', name: 'Milk' },
+              { amount: 1.5, unit: 'tbsp', name: 'White vinegar' }
+            ]
+          }
+        },
+        'Mashed Potatoes and Gravy': {
+          baseServings: 6,
+          categories: {
+            'Produce': [
+              { amount: 3, unit: 'lb', name: 'Russet potatoes' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' },
+              { amount: 0.5, unit: 'cup', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'Chicken broth' },
+              { amount: 3, unit: 'tbsp', name: 'All-purpose flour' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ]
+          }
+        }
+      },
+      "Cracker Barrel": {
+        'Hashbrown Casserole': {
+          baseServings: 8,
+          categories: {
+            'Produce': [
+              { amount: 30, unit: 'oz', name: 'Frozen hashbrowns' },
+              { amount: 0.5, unit: '', name: 'Onion, diced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Cheddar cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Butter, melted' },
+              { amount: 10.5, unit: 'oz', name: 'Cream of chicken soup' },
+              { amount: 1, unit: 'cup', name: 'Sour cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ]
+          }
+        },
+        'Meatloaf': {
+          baseServings: 6,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion, diced' },
+              { amount: 1, unit: '', name: 'Bell pepper, diced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: '', name: 'Eggs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'Breadcrumbs' },
+              { amount: 0.75, unit: 'cup', name: 'Ketchup' },
+              { amount: 2, unit: 'tbsp', name: 'Brown sugar' },
+              { amount: 1, unit: 'tsp', name: 'Worcestershire sauce' }
+            ]
+          }
+        },
+        'Chicken and Dumplings': {
+          baseServings: 6,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Chicken breast' }
+            ],
+            'Produce': [
+              { amount: 2, unit: '', name: 'Carrots' },
+              { amount: 2, unit: '', name: 'Celery stalks' },
+              { amount: 1, unit: '', name: 'Onion' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 3, unit: 'tbsp', name: 'Butter' },
+              { amount: 0.5, unit: 'cup', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 8, unit: 'cups', name: 'Chicken broth' },
+              { amount: 2, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 1, unit: 'tbsp', name: 'Baking powder' }
+            ]
+          }
+        }
+      },
+      "LongHorn Steakhouse": {
+        'Parmesan Crusted Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Chicken breasts' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Parmesan cheese, grated' },
+              { amount: 1, unit: 'cup', name: 'Mozzarella cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Mayonnaise' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'Ranch dressing' },
+              { amount: 0.5, unit: 'cup', name: 'Breadcrumbs' },
+              { amount: 1, unit: 'tsp', name: 'Garlic powder' }
+            ]
+          }
+        },
+        'Steak Marinade': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Steaks (sirloin or ribeye)' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.25, unit: 'cup', name: 'Soy sauce' },
+              { amount: 0.25, unit: 'cup', name: 'Olive oil' },
+              { amount: 2, unit: 'tbsp', name: 'Worcestershire sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Brown sugar' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ]
+          }
+        }
+      },
+      "Buffalo Wild Wings": {
+        'Classic Buffalo Wings': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 3, unit: 'lb', name: 'Chicken wings' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: "Hot sauce (Frank's RedHot)" },
+              { amount: 1, unit: 'tbsp', name: 'White vinegar' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Garlic Parmesan Wings': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 3, unit: 'lb', name: 'Chicken wings' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese, grated' },
+              { amount: 0.5, unit: 'cup', name: 'Butter' }
+            ],
+            'Produce': [
+              { amount: 6, unit: '', name: 'Garlic cloves, minced' },
+              { amount: 2, unit: 'tbsp', name: 'Parsley' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        }
+      },
+      "Outback Steakhouse": {
+        "Bloomin' Onion": {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 1, unit: '', name: 'Large sweet onion' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Buttermilk' },
+              { amount: 2, unit: '', name: 'Eggs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 2, unit: 'tsp', name: 'Cayenne pepper' },
+              { amount: 1, unit: 'tsp', name: 'Paprika' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' },
+              { amount: 0.5, unit: 'cup', name: 'Mayonnaise (for dipping sauce)' }
+            ]
+          }
+        },
+        'Alice Springs Chicken': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Chicken breasts' },
+              { amount: 8, unit: '', name: 'Bacon strips' }
+            ],
+            'Produce': [
+              { amount: 8, unit: 'oz', name: 'Mushrooms, sliced' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1.5, unit: 'cups', name: 'Colby jack cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Honey mustard sauce' }
+            ]
+          }
+        },
+        'Aussie Cheese Fries': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Russet potatoes' }
+            ],
+            'Meat & Deli': [
+              { amount: 6, unit: '', name: 'Bacon strips' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Colby jack cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Ranch dressing' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        }
+      },
+      "IHOP": {
+        'Buttermilk Pancakes': {
+          baseServings: 4,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Buttermilk' },
+              { amount: 2, unit: '', name: 'Eggs' },
+              { amount: 0.25, unit: 'cup', name: 'Butter, melted' }
+            ],
+            'Pantry & Spices': [
+              { amount: 2, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 2, unit: 'tbsp', name: 'Sugar' },
+              { amount: 1, unit: 'tbsp', name: 'Baking powder' },
+              { amount: 0.5, unit: 'tsp', name: 'Baking soda' }
+            ]
+          }
+        },
+        'French Toast': {
+          baseServings: 4,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 4, unit: '', name: 'Eggs' },
+              { amount: 1, unit: 'cup', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 8, unit: 'slices', name: 'Thick bread (brioche or Texas toast)' },
+              { amount: 1, unit: 'tsp', name: 'Cinnamon' },
+              { amount: 1, unit: 'tsp', name: 'Vanilla extract' },
+              { amount: 2, unit: 'tbsp', name: 'Butter (for cooking)' }
+            ]
+          }
+        }
+      },
+      "Denny's": {
+        'Moons Over My Hammy': {
+          baseServings: 2,
+          categories: {
+            'Meat & Deli': [
+              { amount: 6, unit: '', name: 'Ham slices' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: '', name: 'Eggs' },
+              { amount: 4, unit: '', name: 'Swiss cheese slices' },
+              { amount: 4, unit: '', name: 'Cheddar cheese slices' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'slices', name: 'Sourdough bread' },
+              { amount: 2, unit: 'tbsp', name: 'Butter' }
+            ]
+          }
+        },
+        'Grand Slam Breakfast': {
+          baseServings: 2,
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Bacon strips' },
+              { amount: 4, unit: '', name: 'Sausage links' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: '', name: 'Eggs' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Pancakes (from mix or scratch)' },
+              { amount: 2, unit: 'tbsp', name: 'Butter' }
+            ]
+          }
+        }
+      },
+      "Subway": {
+        'Sweet Onion Sauce': {
+          baseServings: 8,
+          categories: {
+            'Produce': [
+              { amount: 0.25, unit: '', name: 'Onion, minced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Sugar' },
+              { amount: 0.25, unit: 'cup', name: 'White vinegar' },
+              { amount: 2, unit: 'tbsp', name: 'Ketchup' },
+              { amount: 1, unit: 'tbsp', name: 'Soy sauce' },
+              { amount: 1, unit: 'tbsp', name: 'Cornstarch' }
+            ]
+          }
+        },
+        'Meatball Marinara Sub': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Mozzarella cheese, shredded' },
+              { amount: 0.25, unit: 'cup', name: 'Parmesan cheese' },
+              { amount: 1, unit: '', name: 'Egg' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Sub rolls' },
+              { amount: 24, unit: 'oz', name: 'Marinara sauce' },
+              { amount: 0.5, unit: 'cup', name: 'Breadcrumbs' },
+              { amount: 1, unit: 'tsp', name: 'Italian seasoning' }
+            ]
+          }
+        }
+      },
+      "Chick-fil-A": {
+        'Chicken Sandwich': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 4, unit: '', name: 'Chicken breasts' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Buttermilk' },
+              { amount: 1, unit: 'cup', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Pickle-brioche buns' },
+              { amount: 8, unit: '', name: 'Dill pickle slices' },
+              { amount: 1.5, unit: 'cups', name: 'All-purpose flour' },
+              { amount: 2, unit: 'tsp', name: 'Powdered sugar' },
+              { amount: 1, unit: 'tsp', name: 'Paprika' },
+              { amount: 4, unit: 'cups', name: 'Peanut oil (for frying)' }
+            ]
+          }
+        },
+        'Waffle Fries': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Russet potatoes' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Chick-fil-A Sauce': {
+          baseServings: 8,
+          categories: {
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'cup', name: 'Mayonnaise' },
+              { amount: 2, unit: 'tbsp', name: 'Barbecue sauce' },
+              { amount: 1, unit: 'tbsp', name: 'Honey' },
+              { amount: 2, unit: 'tsp', name: 'Yellow mustard' },
+              { amount: 0.25, unit: 'tsp', name: 'Garlic powder' }
+            ]
+          }
+        },
+        'Mac and Cheese': {
+          baseServings: 6,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 3, unit: 'cups', name: 'Sharp cheddar cheese, shredded' },
+              { amount: 1, unit: 'cup', name: 'Colby jack cheese, shredded' },
+              { amount: 2, unit: 'cups', name: 'Milk' },
+              { amount: 2, unit: 'tbsp', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'lb', name: 'Elbow macaroni' },
+              { amount: 2, unit: 'tbsp', name: 'All-purpose flour' },
+              { amount: 0.5, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Frosted Lemonade': {
+          baseServings: 4,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'cups', name: 'Vanilla ice cream' }
+            ],
+            'Produce': [
+              { amount: 4, unit: '', name: 'Lemons, juiced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.75, unit: 'cup', name: 'Sugar' },
+              { amount: 2, unit: 'cups', name: 'Water' }
+            ]
+          }
+        },
+        'Kale Crunch Side': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: 'cups', name: 'Kale, chopped' },
+              { amount: 2, unit: 'cups', name: 'Green cabbage, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Broccolini' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.25, unit: 'cup', name: 'Apple cider vinaigrette' },
+              { amount: 0.25, unit: 'cup', name: 'Almonds, sliced' }
+            ]
+          }
+        }
+      },
+      "Wendy's": {
+        'Baconator': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Ground beef' },
+              { amount: 12, unit: '', name: 'Bacon strips' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 8, unit: '', name: 'American cheese slices' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Hamburger buns' },
+              { amount: 0.25, unit: 'cup', name: 'Ketchup' },
+              { amount: 0.25, unit: 'cup', name: 'Mayonnaise' }
+            ]
+          }
+        },
+        'Frosty': {
+          baseServings: 4,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Milk' },
+              { amount: 1, unit: 'cup', name: 'Heavy cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.33, unit: 'cup', name: 'Cocoa powder' },
+              { amount: 0.5, unit: 'cup', name: 'Sugar' },
+              { amount: 1, unit: 'tsp', name: 'Vanilla extract' }
+            ]
+          }
+        },
+        'Chili': {
+          baseServings: 6,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Onion, diced' },
+              { amount: 1, unit: '', name: 'Bell pepper, diced' },
+              { amount: 3, unit: '', name: 'Garlic cloves' }
+            ],
+            'Pantry & Spices': [
+              { amount: 28, unit: 'oz', name: 'Crushed tomatoes' },
+              { amount: 15, unit: 'oz', name: 'Kidney beans, canned' },
+              { amount: 15, unit: 'oz', name: 'Pinto beans, canned' },
+              { amount: 2, unit: 'tbsp', name: 'Chili powder' },
+              { amount: 1, unit: 'tsp', name: 'Cumin' }
+            ]
+          }
+        }
+      },
+      "Five Guys": {
+        'Cajun Fries': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Russet potatoes' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Peanut oil (for frying)' },
+              { amount: 2, unit: 'tbsp', name: 'Cajun seasoning' }
+            ]
+          }
+        },
+        'Classic Burger': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Tomato, sliced' },
+              { amount: 1, unit: '', name: 'Onion, sliced' },
+              { amount: 4, unit: 'leaves', name: 'Lettuce' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 8, unit: '', name: 'American cheese slices' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Hamburger buns' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 0.5, unit: 'tsp', name: 'Black pepper' }
+            ]
+          }
+        }
+      },
+      "Culver's": {
+        'ButterBurger': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'lb', name: 'Ground beef' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'tbsp', name: 'Butter' },
+              { amount: 4, unit: '', name: 'American cheese slices' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: '', name: 'Buttery buns' },
+              { amount: 1, unit: 'tsp', name: 'Salt' }
+            ]
+          }
+        },
+        'Fresh Cheese Curds': {
+          baseServings: 4,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'lb', name: 'Cheese curds' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'All-purpose flour' },
+              { amount: 1, unit: 'cup', name: 'Beer' },
+              { amount: 1, unit: 'tsp', name: 'Baking powder' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        }
+      },
+      "Sonic": {
+        'Cherry Limeade': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 3, unit: '', name: 'Limes, juiced' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Lemon-lime soda' },
+              { amount: 0.25, unit: 'cup', name: 'Maraschino cherry juice' },
+              { amount: 12, unit: '', name: 'Maraschino cherries' }
+            ]
+          }
+        },
+        'Tots': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Russet potatoes' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' },
+              { amount: 1, unit: 'tsp', name: 'Salt' },
+              { amount: 2, unit: 'tbsp', name: 'Cornstarch' }
+            ]
+          }
+        },
+        'Slush (Blue Coconut)': {
+          baseServings: 4,
+          categories: {
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Ice' },
+              { amount: 1, unit: 'cup', name: 'Blue coconut syrup or flavoring' },
+              { amount: 2, unit: 'cups', name: 'Lemon-lime soda' }
+            ]
+          }
+        }
+      },
+      "Dairy Queen": {
+        'Oreo Blizzard': {
+          baseServings: 2,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 3, unit: 'cups', name: 'Vanilla ice cream' },
+              { amount: 0.25, unit: 'cup', name: 'Milk' }
+            ],
+            'Pantry & Spices': [
+              { amount: 10, unit: '', name: 'Oreo cookies, crushed' }
+            ]
+          }
+        },
+        'Dilly Bar': {
+          baseServings: 6,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 4, unit: 'cups', name: 'Vanilla ice cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'Chocolate coating' },
+              { amount: 6, unit: '', name: 'Popsicle sticks' }
+            ]
+          }
+        }
+      },
+      "Wingstop": {
+        'Lemon Pepper Wings': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 3, unit: 'lb', name: 'Chicken wings' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Butter' }
+            ],
+            'Pantry & Spices': [
+              { amount: 3, unit: 'tbsp', name: 'Lemon pepper seasoning' },
+              { amount: 1, unit: '', name: 'Lemon, zested' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        },
+        'Garlic Parmesan Fries': {
+          baseServings: 4,
+          categories: {
+            'Produce': [
+              { amount: 4, unit: '', name: 'Russet potatoes' },
+              { amount: 4, unit: '', name: 'Garlic cloves, minced' },
+              { amount: 2, unit: 'tbsp', name: 'Parsley' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 0.5, unit: 'cup', name: 'Parmesan cheese, grated' }
+            ],
+            'Pantry & Spices': [
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' },
+              { amount: 2, unit: 'tbsp', name: 'Butter' }
+            ]
+          }
+        },
+        'Original Hot Wings': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 3, unit: 'lb', name: 'Chicken wings' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: 'cup', name: 'Cayenne hot sauce' },
+              { amount: 2, unit: 'tbsp', name: 'Butter' },
+              { amount: 4, unit: 'cups', name: 'Vegetable oil (for frying)' }
+            ]
+          }
+        }
+      },
+      "Chuy's": {
+        'Creamy Jalapeno Dip': {
+          baseServings: 6,
+          categories: {
+            'Produce': [
+              { amount: 2, unit: '', name: 'Jalapenos' },
+              { amount: 2, unit: 'tbsp', name: 'Cilantro' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1, unit: 'cup', name: 'Mayonnaise' },
+              { amount: 0.5, unit: 'cup', name: 'Sour cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 0.5, unit: 'tsp', name: 'Salt' },
+              { amount: 1, unit: 'tsp', name: 'Ranch seasoning' }
+            ]
+          }
+        },
+        'Chicken Enchiladas': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 2, unit: 'cups', name: 'Chicken breast, cooked and shredded' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Monterey jack cheese, shredded' },
+              { amount: 0.5, unit: 'cup', name: 'Sour cream' }
+            ],
+            'Pantry & Spices': [
+              { amount: 8, unit: '', name: 'Corn tortillas' },
+              { amount: 15, unit: 'oz', name: 'Green chile sauce' },
+              { amount: 1, unit: 'tsp', name: 'Cumin' }
+            ]
+          }
+        },
+        'Elvis Queso': {
+          baseServings: 6,
+          categories: {
+            'Dairy & Cheese': [
+              { amount: 16, unit: 'oz', name: 'Queso blanco cheese' },
+              { amount: 0.5, unit: 'cup', name: 'Sour cream' }
+            ],
+            'Produce': [
+              { amount: 1, unit: '', name: 'Jalapeno, diced' },
+              { amount: 2, unit: 'tbsp', name: 'Cilantro' }
+            ],
+            'Pantry & Spices': [
+              { amount: 10, unit: 'oz', name: 'Diced tomatoes with green chiles' },
+              { amount: 1, unit: 'tsp', name: 'Cumin' }
+            ]
+          }
+        }
+      },
+      "California Pizza Kitchen": {
+        'BBQ Chicken Pizza': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'cups', name: 'Chicken breast, cooked and diced' }
+            ],
+            'Produce': [
+              { amount: 0.5, unit: '', name: 'Red onion, sliced' },
+              { amount: 2, unit: 'tbsp', name: 'Cilantro' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 2, unit: 'cups', name: 'Mozzarella cheese, shredded' },
+              { amount: 0.25, unit: 'cup', name: 'Gouda cheese, shredded' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: '', name: 'Pizza dough' },
+              { amount: 0.75, unit: 'cup', name: 'BBQ sauce' }
+            ]
+          }
+        },
+        'Thai Chicken Pizza': {
+          baseServings: 4,
+          categories: {
+            'Meat & Deli': [
+              { amount: 1.5, unit: 'cups', name: 'Chicken breast, cooked and diced' }
+            ],
+            'Produce': [
+              { amount: 1, unit: 'cup', name: 'Bean sprouts' },
+              { amount: 2, unit: '', name: 'Green onions' },
+              { amount: 2, unit: 'tbsp', name: 'Cilantro' },
+              { amount: 2, unit: 'tbsp', name: 'Peanuts, crushed' }
+            ],
+            'Dairy & Cheese': [
+              { amount: 1.5, unit: 'cups', name: 'Mozzarella cheese, shredded' }
+            ],
+            'Pantry & Spices': [
+              { amount: 1, unit: '', name: 'Pizza dough' },
+              { amount: 0.5, unit: 'cup', name: 'Peanut sauce' }
+            ]
+          }
+        }
+      }
+    };
+
+    let allRecipes = [];
+    let currentFilter = 'all';
+    let currentRecipe = null;
+    let currentServings = 4;
+    let checkedItems = new Set();
+
+    function buildRecipeList() {
+      allRecipes = [];
+      Object.entries(recipes).forEach(([restaurant, recipeList]) => {
+        Object.entries(recipeList).forEach(([name, data]) => {
+          allRecipes.push({
+            restaurant,
+            name,
+            ...data
+          });
+        });
+      });
+      displayRecipes();
+    }
+
+    function displayRecipes() {
+      const recipeList = document.getElementById('recipeList');
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      
+      const filtered = allRecipes.filter(r => {
+        const matchesSearch = r.name.toLowerCase().includes(searchTerm) || 
+                             r.restaurant.toLowerCase().includes(searchTerm);
+        const matchesFilter = currentFilter === 'all' || r.restaurant === currentFilter;
+        return matchesSearch && matchesFilter;
+      });
+
+      if (filtered.length === 0) {
+        recipeList.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div>No recipes found</div></div>';
+        return;
+      }
+
+      recipeList.innerHTML = filtered.map(recipe => `
+        <div class="recipe-card" onclick="loadRecipe('${recipe.name.replace(/'/g, "\\'")}', '${recipe.restaurant.replace(/'/g, "\\'")}')">
+          <div class="recipe-card-restaurant">${recipe.restaurant}</div>
+          <div class="recipe-card-name">${recipe.name}</div>
+          <div class="recipe-card-desc">Serves ${recipe.baseServings}</div>
+        </div>
+      `).join('');
+    }
+
+    function filterRecipes() {
+      displayRecipes();
+    }
+
+    function filterByRestaurant(restaurant) {
+      currentFilter = restaurant;
+      displayRecipes();
+    }
+
+    function loadRecipe(name, restaurant) {
+      currentRecipe = allRecipes.find(r => r.name === name && r.restaurant === restaurant);
+      if (!currentRecipe) return;
+
+      checkedItems.clear();
+      currentServings = currentRecipe.baseServings;
+
+      document.getElementById('recipeName').textContent = currentRecipe.name;
+      document.getElementById('recipeMeta').textContent = currentRecipe.restaurant;
+      document.getElementById('servingsValue').textContent = currentServings;
+
+      renderIngredients();
+      updateProgress();
+      switchTab('ingredients');
+
+      document.getElementById('recipeView').classList.add('active');
+      document.getElementById('searchView').style.display = 'none';
+    }
+
+    function changeServings(delta) {
+      const newServings = currentServings + delta;
+      if (newServings < 1 || newServings > 24) return;
+      currentServings = newServings;
+      document.getElementById('servingsValue').textContent = currentServings;
+      renderIngredients();
+      updateProgress();
+    }
+
+    function formatAmount(amount) {
+      const rounded = Math.round(amount * 100) / 100;
+      
+      if (Number.isInteger(rounded)) return rounded.toString();
+      
+      const fractions = [
+        [0.125, '1/8'], [0.25, '1/4'], [0.33, '1/3'], [0.375, '3/8'],
+        [0.5, '1/2'], [0.625, '5/8'], [0.67, '2/3'], [0.75, '3/4'], [0.875, '7/8']
+      ];
+      
+      const whole = Math.floor(rounded);
+      const decimal = rounded - whole;
+      
+      for (const [val, frac] of fractions) {
+        if (Math.abs(decimal - val) < 0.05) {
+          return whole > 0 ? `${whole} ${frac}` : frac;
+        }
+      }
+      
+      return rounded.toString();
+    }
+
+    function scaleIngredient(ingredient) {
+      if (ingredient.amount === null) {
+        return { qty: '', name: ingredient.name };
+      }
+      
+      const scaleFactor = currentServings / currentRecipe.baseServings;
+      const scaledAmount = ingredient.amount * scaleFactor;
+      const formatted = formatAmount(scaledAmount);
+      
+      const qty = ingredient.unit ? `${formatted} ${ingredient.unit}` : formatted;
+      return { qty, name: ingredient.name };
+    }
+
+    function renderIngredients() {
+      const ingredientList = document.getElementById('ingredientList');
+      let html = '';
+
+      Object.entries(currentRecipe.categories).forEach(([category, ingredients]) => {
+        if (!ingredients || ingredients.length === 0) return;
+        
+        html += `<div class="section">
+          <div class="section-title">${category}</div>`;
+        
+        ingredients.forEach(ingredient => {
+          const key = `${category}:${ingredient.name}`;
+          const isChecked = checkedItems.has(key);
+          const scaled = scaleIngredient(ingredient);
+          
+          html += `
+            <div class="item ${isChecked ? 'checked' : ''}" onclick="toggleItem('${key.replace(/'/g, "\\'")}')">
+              <div class="checkbox"></div>
+              <div class="item-content">
+                <div class="item-text">${scaled.name}</div>
+                ${scaled.qty ? `<div class="item-qty">${scaled.qty}</div>` : ''}
+              </div>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+      });
+
+      ingredientList.innerHTML = html;
+    }
+
+    function switchTab(tab) {
+      const ingredientsTab = document.getElementById('ingredientsTab');
+      const instructionsTab = document.getElementById('instructionsTab');
+      const ingredientList = document.getElementById('ingredientList');
+      const instructionsList = document.getElementById('instructionsList');
+      const progressContainer = document.querySelector('.progress-container');
+
+      if (tab === 'ingredients') {
+        ingredientsTab.classList.add('active');
+        instructionsTab.classList.remove('active');
+        ingredientList.style.display = 'block';
+        instructionsList.classList.remove('active');
+        progressContainer.style.display = 'block';
+      } else {
+        ingredientsTab.classList.remove('active');
+        instructionsTab.classList.add('active');
+        ingredientList.style.display = 'none';
+        instructionsList.classList.add('active');
+        progressContainer.style.display = 'none';
+        renderInstructions();
+      }
+    }
+
+    function renderInstructions() {
+      const instructionsList = document.getElementById('instructionsList');
+      const steps = currentRecipe.instructions;
+
+      if (!steps || steps.length === 0) {
+        instructionsList.innerHTML = '<div class="no-instructions">Instructions not added yet for this recipe.</div>';
+        return;
+      }
+
+      instructionsList.innerHTML = steps.map((step, idx) => `
+        <div class="instruction-step">
+          <div class="step-number">${idx + 1}</div>
+          <div class="step-text">${step}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleItem(key) {
+      if (checkedItems.has(key)) {
+        checkedItems.delete(key);
+      } else {
+        checkedItems.add(key);
+      }
+      renderIngredients();
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const items = document.querySelectorAll('.item');
+      const checked = checkedItems.size;
+      const percent = items.length > 0 ? (checked / items.length) * 100 : 0;
+      
+      document.getElementById('progressFill').style.width = percent + '%';
+      document.getElementById('checked').textContent = checked;
+      document.getElementById('total').textContent = items.length;
+    }
+
+    function backToSearch() {
+      document.getElementById('recipeView').classList.remove('active');
+      document.getElementById('searchView').style.display = 'flex';
+      checkedItems.clear();
+      currentRecipe = null;
+    }
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      checkedItems.clear();
+      renderIngredients();
+      updateProgress();
+    });
+
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      let text = `${currentRecipe.name} - Shopping List\n${currentRecipe.restaurant} • Serves ${currentServings}\n\n`;
+      
+      Object.entries(currentRecipe.categories).forEach(([category, ingredients]) => {
+        if (!ingredients || ingredients.length === 0) return;
+        text += `${category}\n`;
+        ingredients.forEach(ing => {
+          const key = `${category}:${ing.name}`;
+          const checked = checkedItems.has(key) ? '✓ ' : '☐ ';
+          const scaled = scaleIngredient(ing);
+          const qtyPart = scaled.qty ? ` (${scaled.qty})` : '';
+          text += `${checked}${scaled.name}${qtyPart}\n`;
+        });
+        text += '\n';
+      });
+
+      if (navigator.share) {
+        navigator.share({ title: 'Shopping List', text: text });
+      } else {
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.getElementById('shareBtn');
+          const original = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = original; }, 2000);
+        });
+      }
+    });
+
+    // Initialize
+    buildRecipeList();
+  </script>
+</body>
+</html>
